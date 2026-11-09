@@ -34,4 +34,5 @@ jobs:
             exit 0
           fi
           git commit -m "chore: tend the bonsai 🌳"
-          git push
+          git pull --rebase
+          git push || { sleep 5; git pull --rebase && git push; }
