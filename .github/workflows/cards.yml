@@ -1,0 +1,65 @@
+name: Cards
+
+on:
+  schedule:
+    # Twenty minutes after the koi, so the two pushes never race.
+    - cron: "40 0 * * *"
+  workflow_dispatch:
+  push:
+    paths: [.github/workflows/cards.yml]
+
+permissions:
+  contents: write
+
+concurrency: cards
+
+jobs:
+  cards:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: Draw the stats card, light
+        uses: stats-organization/github-readme-stats-action@2c498845f71017821efaad14293ebc736156ef21 # v2.1.0
+        with:
+          card: stats
+          options: username=yashladekar&hide_border=true&disable_animations=true&bg_color=00000000&title_color=4a32a6&text_color=1f2328&icon_color=1257ab&card_width=400&show_icons=true&rank_icon=github&ring_color=4a32a6
+          path: cards/stats-light.svg
+          core_version: 2.2.0
+          # A failed fetch fails the run instead of writing an error card.
+          fail_on_error: "true"
+      - name: Draw the stats card, dark
+        uses: stats-organization/github-readme-stats-action@2c498845f71017821efaad14293ebc736156ef21 # v2.1.0
+        with:
+          card: stats
+          options: username=yashladekar&hide_border=true&disable_animations=true&bg_color=00000000&title_color=a98ff7&text_color=c9d1d9&icon_color=7ccdf2&card_width=400&show_icons=true&rank_icon=github&ring_color=a98ff7
+          path: cards/stats-dark.svg
+          core_version: 2.2.0
+          fail_on_error: "true"
+      - name: Draw the languages card, light
+        uses: stats-organization/github-readme-stats-action@2c498845f71017821efaad14293ebc736156ef21 # v2.1.0
+        with:
+          card: top-langs
+          options: username=yashladekar&hide_border=true&disable_animations=true&bg_color=00000000&title_color=4a32a6&text_color=1f2328&icon_color=1257ab&card_width=400&layout=compact&size_weight=0&count_weight=1&langs_count=6&hide=html%2Ccss%2Cmakefile%2Ccmake%2Cjupyter+notebook%2Ctex%2Cshell%2Cdockerfile&custom_title=Languages+by+repo+count
+          path: cards/languages-light.svg
+          core_version: 2.2.0
+          fail_on_error: "true"
+      - name: Draw the languages card, dark
+        uses: stats-organization/github-readme-stats-action@2c498845f71017821efaad14293ebc736156ef21 # v2.1.0
+        with:
+          card: top-langs
+          options: username=yashladekar&hide_border=true&disable_animations=true&bg_color=00000000&title_color=a98ff7&text_color=c9d1d9&icon_color=7ccdf2&card_width=400&layout=compact&size_weight=0&count_weight=1&langs_count=6&hide=html%2Ccss%2Cmakefile%2Ccmake%2Cjupyter+notebook%2Ctex%2Cshell%2Cdockerfile&custom_title=Languages+by+repo+count
+          path: cards/languages-dark.svg
+          core_version: 2.2.0
+          fail_on_error: "true"
+      - name: Commit the cards if they changed
+        shell: bash
+        run: |
+          git add cards
+          if git diff --cached --quiet; then
+            echo "The cards are unchanged; nothing to commit."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit --quiet --message "cards: draw the day's cards"
+          git push --quiet

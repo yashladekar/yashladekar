@@ -1,0 +1,37 @@
+name: bonsai
+on:
+  schedule:
+    - cron: '0 3 * * *'
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/bonsai.yml
+      - scripts/recolor.py
+permissions:
+  contents: write
+concurrency:
+  group: bonsai-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  grow:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      # Upstream's native crop keeps the full animation without empty margins.
+      - uses: egorthinks/git-bonsai@bec04c39f62731fdb28c3b82322ef21cbf3bdfac
+        with:
+          commit: 'false'
+      # Swap the leaf colors for the comet-night palette before committing.
+      - run: python3 scripts/recolor.py output
+      - run: |
+          git config user.name "git-bonsai[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add output
+          if git diff --cached --quiet; then
+            echo "bonsai unchanged — nothing to commit"
+            exit 0
+          fi
+          git commit -m "chore: tend the bonsai 🌳"
+          git push
